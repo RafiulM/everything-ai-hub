@@ -15,10 +15,14 @@ import {
   IconFolder,
   IconHelp,
   IconListDetails,
+  IconMessage,
+  IconPhoto,
   IconReport,
   IconSearch,
   IconSettings,
   IconUsers,
+  IconWorld,
+  IconKey,
 } from "@tabler/icons-react"
 
 import { NavDocuments } from "@/components/nav-documents"
@@ -39,28 +43,28 @@ const staticData = {
   navMain: [
     {
       title: "Dashboard",
-      url: "#",
+      url: "/dashboard",
       icon: IconDashboard,
     },
     {
-      title: "Lifecycle",
-      url: "#",
-      icon: IconListDetails,
+      title: "AI Chat",
+      url: "/dashboard/chat",
+      icon: IconMessage,
+    },
+    {
+      title: "Image Generation",
+      url: "/dashboard/image-generation",
+      icon: IconPhoto,
+    },
+    {
+      title: "Web Scraper",
+      url: "/dashboard/web-scraper",
+      icon: IconWorld,
     },
     {
       title: "Analytics",
-      url: "#",
+      url: "/dashboard",
       icon: IconChartBar,
-    },
-    {
-      title: "Projects",
-      url: "#",
-      icon: IconFolder,
-    },
-    {
-      title: "Team",
-      url: "#",
-      icon: IconUsers,
     },
   ],
   navClouds: [
@@ -112,6 +116,11 @@ const staticData = {
     },
   ],
   navSecondary: [
+    {
+      title: "API Keys",
+      url: "/dashboard/settings/keys",
+      icon: IconKey,
+    },
     {
       title: "Settings",
       url: "#",
@@ -170,8 +179,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               className="data-[slot=sidebar-menu-button]:!p-1.5"
             >
               <Link href="/">
-                <Image src="/codeguide-logo.png" alt="CodeGuide" width={32} height={32} className="rounded-lg" />
-                <span className="text-base font-semibold font-parkinsans">CodeGuide</span>
+                <Image src="/codeguide-logo.png" alt="Everything AI" width={32} height={32} className="rounded-lg" />
+                <span className="text-base font-semibold font-parkinsans">Everything AI</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
