@@ -1,117 +1,97 @@
-# Project Requirements Document: codeguide-starter
-
----
+# Project Requirements Document (PRD)
 
 ## 1. Project Overview
 
-The **codeguide-starter** project is a boilerplate web application that provides a ready-made foundation for any web project requiring secure user authentication and a post-login dashboard. It sets up the common building blocks—sign-up and sign-in pages, API routes to handle registration and login, and a simple dashboard interface driven by static data. By delivering this skeleton, it accelerates development time and ensures best practices are in place from day one.
+The "Everything AI" Super App aims to be a one-stop hub where authenticated users can access, experiment with, and track their usage of multiple AI services (text chat, image generation, web scraping, etc.) through a clean, unified web interface. Built on a robust full-stack template called `everything-ai-hub`, the app provides secure user authentication, an interactive analytics dashboard, and a polished UI out of the box. Users will be able to connect their own API keys, send requests to various AI providers, and visualize their activity in real time.
 
-This starter kit is being built to solve the friction developers face when setting up repeated common tasks: credential handling, session management, page routing, and theming. Key objectives include: 1) delivering a fully working authentication flow (registration & login), 2) providing a gated dashboard area upon successful login, 3) establishing a clear, maintainable project structure using Next.js and TypeScript, and 4) demonstrating a clean theming approach with global and section-specific CSS. Success is measured by having an end-to-end login journey in under 200 lines of code and zero runtime type errors.
+By providing a standardized foundation—powered by Next.js, TypeScript, Drizzle ORM, and the Vercel AI SDK—the project drastically reduces setup time for new AI features. Key objectives include 1) ensuring user data and API keys remain secure, 2) offering a responsive, real-time UI for AI interactions, and 3) delivering an analytics dashboard that tracks usage metrics (tokens used, models accessed, timestamps) for each user. Success will be measured by secure login flows, reliable AI calls with proper error handling, and a dashboard that accurately reflects user activity.
 
 ---
 
 ## 2. In-Scope vs. Out-of-Scope
 
 ### In-Scope (Version 1)
-- User registration (sign-up) form with validation
-- User login (sign-in) form with validation
-- Next.js API routes under `/api/auth/route.ts` handling:
-  - Credential validation
-  - Password hashing (e.g., bcrypt)
-  - Session creation or JWT issuance
-- Protected dashboard pages under `/dashboard`:
-  - `layout.tsx` wrapping dashboard content
-  - `page.tsx` rendering static data from `data.json`
-- Global application layout in `/app/layout.tsx`
-- Basic styling via `globals.css` and `dashboard/theme.css`
-- TypeScript strict mode enabled
+- User registration, login, logout, and session management via Better Auth.  
+- Dashboard area under `/dashboard` showing real-time usage charts and tables using Drizzle ORM + PostgreSQL.  
+- AI Chat feature at `/chat` using the Vercel AI SDK’s `useChat` hook with streaming responses.  
+- Image Generation feature at `/image-generation` calling an external model API.  
+- Web Scraping feature at `/web-scraper` calling the Firecrawl API.  
+- UI built with Next.js (App Router), React, TypeScript, Tailwind CSS, and `shadcn/ui` components.  
+- Secure storage of user-provided API keys (encrypted at rest) and usage logging in `usage_analytics` table.  
+- Containerized development environment (Docker + docker-compose) with a PostgreSQL service.  
+- Basic error handling and user notifications (Toaster) for AI request failures or form validation errors.  
 
 ### Out-of-Scope (Later Phases)
-- Integration with a real database (PostgreSQL, MongoDB, etc.)
-- Advanced authentication flows (password reset, email verification, MFA)
-- Role-based access control (RBAC)
-- Multi-tenant or white-label theming
-- Unit, integration, or end-to-end testing suites
-- CI/CD pipeline and production deployment scripts
+- Mobile app or React Native implementation.  
+- Billing or subscription management.  
+- Role-based access control beyond basic authenticated vs. anonymous.  
+- Multi-tenant architecture (support for organizational accounts).  
+- Advanced analytics like predictive insights or anomaly detection.  
+- Offline access or progressive web app capabilities.  
 
 ---
 
 ## 3. User Flow
 
-A new visitor lands on the root URL and sees a welcome page with options to **Sign Up** or **Sign In**. If they choose Sign Up, they fill in their email, password, and hit “Create Account.” The form submits to `/api/auth/route.ts`, which hashes the password, creates a new user session or token, and redirects them to the dashboard. If any input is invalid, an inline error message explains the issue (e.g., “Password too short”).
+A new user visits the landing page and clicks "Sign Up." They provide their email and password, complete the registration form, and land on the main dashboard. The dashboard sidebar shows links: Chat, Image Generation, Web Scraper, Settings, and Analytics. The main panel welcomes them with an overview chart of zero usage and prompts them to add an API key under Settings.
 
-Once authenticated, the user is taken to the `/dashboard` route. Here they see a sidebar or header defined by `dashboard/layout.tsx`, and the main panel pulls in static data from `data.json`. They can log out (if that control is present), but otherwise their entire session is managed by server-side cookies or tokens. Returning users go directly to Sign In, submit credentials, and upon success they land back on `/dashboard`. Any unauthorized access to `/dashboard` redirects back to Sign In.
+After adding their third-party AI API key, the user navigates to the Chat page. They type a message in the chat interface and hit "Send." Behind the scenes, a Next.js Server Action retrieves their encrypted key, sends the chat history to the AI model via Vercel AI SDK, logs token usage to the database, and streams the AI’s reply back to the client. The user can then click "Analytics" to see updated charts and tables reflecting their recent chat session.
 
 ---
 
 ## 4. Core Features
 
-- **Sign-Up Page (`/app/sign-up/page.tsx`)**: Form fields for email & password, client-side validation, POST to `/api/auth`.
-- **Sign-In Page (`/app/sign-in/page.tsx`)**: Form fields for email & password, client-side validation, POST to `/api/auth`.
-- **Authentication API (`/app/api/auth/route.ts`)**: Handles both registration and login based on HTTP method, integrates password hashing (bcrypt) and session or JWT logic.
-- **Global Layout (`/app/layout.tsx` + `globals.css`)**: Shared header, footer, and CSS resets across all pages.
-- **Dashboard Layout (`/app/dashboard/layout.tsx` + `dashboard/theme.css`)**: Sidebar or top nav for authenticated flows, section-specific styling.
-- **Dashboard Page (`/app/dashboard/page.tsx`)**: Reads `data.json`, renders it as cards or tables.
-- **Static Data Source (`/app/dashboard/data.json`)**: Example dataset to demo dynamic rendering.
-- **TypeScript Configuration**: `tsconfig.json` with strict mode and path aliases (if any).
+- **User Authentication**: Sign up, log in/out, session management using Better Auth with secure cookies and encrypted storage.  
+- **API Key Manager**: Secure form for users to store, view, and delete their own AI service API keys (encrypted at rest).  
+- **AI Chat Module**: Interactive chat interface using Vercel AI SDK’s `useChat` hook, streaming responses, configurable system prompts.  
+- **Image Generation Module**: Page and server action to send image requests to a chosen AI model, display generated images.  
+- **Web Scraper Module**: Integration with Firecrawl API, server action to scrape websites and return structured data to the UI.  
+- **Analytics Dashboard**: Charts (`ChartAreaInteractive`), tables (`DataTable`), and summary cards showing usage metrics (tokens, model counts, timestamps) per user.  
+- **Database Schema**: Drizzle ORM definitions for `users`, `user_api_keys`, `chat_sessions`, `chat_messages`, `usage_analytics`.  
+- **Error Handling & Notifications**: Global Toaster for user-friendly alerts on failures or validation errors.  
+- **Dockerized Environment**: `docker-compose.yml` for local Postgres, environment variable management.  
 
 ---
 
 ## 5. Tech Stack & Tools
 
-- **Framework**: Next.js (App Router) for file-based routing, SSR/SSG, and API routes.
-- **Language**: TypeScript for type safety.
-- **UI Library**: React 18 for component-based UI.
-- **Styling**: Plain CSS via `globals.css` (global reset) and `theme.css` (sectional styling). Can easily migrate to CSS Modules or Tailwind in the future.
-- **Backend**: Node.js runtime provided by Next.js API routes.
-- **Password Hashing**: bcrypt (npm package).
-- **Session/JWT**: NextAuth.js or custom JWT logic (to be decided in implementation).
-- **IDE & Dev Tools**: VS Code with ESLint, Prettier extensions. Optionally, Cursor.ai for AI-assisted coding.
+- **Frontend**: Next.js (App Router), React, TypeScript, Tailwind CSS, shadcn/ui, react-hook-form + Zod for validated forms.  
+- **Backend**: Next.js API Routes & Server Actions, Vercel AI SDK for `useChat` and `useCompletion` hooks.  
+- **Database**: PostgreSQL with Drizzle ORM (schema-as-code, type-safe).  
+- **Authentication**: Better Auth for session handling, encrypted credentials.  
+- **Containerization**: Docker & Docker Compose for local development environment.  
+- **Deployment**: Vercel platform for hosting Next.js app and Serverless functions.  
+- **AI Providers**: OpenAI, Anthropic, Firecrawl (configurable via user-provided API keys).  
 
 ---
 
 ## 6. Non-Functional Requirements
 
-- **Performance**: Initial page load under 200 ms on a standard broadband connection. API responses under 300 ms.
-- **Security**:
-  - HTTPS only in production.
-  - Proper CORS, CSRF protection for API routes.
-  - Secure password storage (bcrypt with salt).
-  - No credentials or secrets checked into version control.
-- **Scalability**: Structure must support adding database integration, caching layers, and advanced auth flows without rewiring core app.
-- **Usability**: Forms should give real-time feedback on invalid input. Layout must be responsive (mobile > 320 px).
-- **Maintainability**: Code must adhere to TypeScript strict mode. Linting & formatting enforced by ESLint/Prettier.
+- **Performance**: API calls to AI services should respond within 1–3 seconds; analytics dashboard queries should complete under 500ms for up to 10k records.  
+- **Security**: All API keys encrypted at rest (e.g., using AES), HTTPS enforced site-wide, secrets managed via environment variables.  
+- **Compliance**: GDPR-ready data handling (users can delete their account and data), CORS configured to allow only authorized origins.  
+- **Usability**: UI must follow WCAG 2.1 AA guidelines for accessibility (keyboard navigation, color contrast).  
+- **Scalability**: Design database tables and queries to handle 100k+ records; Vercel Serverless functions should scale on demand.  
 
 ---
 
 ## 7. Constraints & Assumptions
 
-- **No Database**: Dashboard uses only `data.json`; real database integration is deferred.
-- **Node Version**: Requires Node.js >= 14.
-- **Next.js Version**: Built on Next.js 13+ App Router.
-- **Authentication**: Assumes availability of bcrypt or NextAuth.js at implementation time.
-- **Hosting**: Targets serverless or Node.js-capable hosting (e.g., Vercel, Netlify).
-- **Browser Support**: Modern evergreen browsers; no IE11 support required.
+- The Vercel AI SDK and target AI provider APIs (OpenAI, Anthropic) are available and accessible from serverless environments.  
+- Users will supply valid API keys for their chosen AI services; the app does not provide its own credits.  
+- Local development assumes Docker Desktop is installed; production assumes deployment on Vercel.  
+- PostgreSQL version >=14 and Node.js version >=18 are required.  
 
 ---
 
 ## 8. Known Issues & Potential Pitfalls
 
-- **Static Data Limitation**: `data.json` is only for demo. A real API or database will be needed to avoid stale data.
-  *Mitigation*: Define a clear interface for data fetching so swapping to a live endpoint is trivial.
-
-- **Global CSS Conflicts**: Using global styles can lead to unintended overrides.
-  *Mitigation*: Plan to migrate to CSS Modules or utility-first CSS in Phase 2.
-
-- **API Route Ambiguity**: Single `/api/auth/route.ts` handling both sign-up and sign-in could get complex.
-  *Mitigation*: Clearly branch on HTTP method (`POST /register` vs. `POST /login`) or split into separate files.
-
-- **Lack of Testing**: No test suite means regressions can slip in.
-  *Mitigation*: Build a minimal Jest + React Testing Library setup in an early iteration.
-
-- **Error Handling Gaps**: Client and server must handle edge cases (network failures, malformed input).
-  *Mitigation*: Define a standard error response schema and show user-friendly messages.
+- **API Rate Limits**: Hitting rate limits on user-provided keys can cause failed requests. Mitigation: catch errors and show clear retry or upgrade suggestions.  
+- **Streaming Interruptions**: Network hiccups can drop streaming responses from Vercel AI SDK. Mitigation: implement automatic reconnect logic or partial retry.  
+- **Database Migration Conflicts**: Drizzle ORM schema changes may conflict if multiple branches alter the same tables. Mitigation: enforce a migration review process and use `drizzle-kit` correctly.  
+- **Client-Side Key Exposure**: Accidentally calling AI APIs from the client could leak keys. Mitigation: strictly separate Server Actions (secure) from Client Components (UI only).  
+- **Large Analytics Queries**: Dashboard queries over large datasets may slow down. Mitigation: add pagination, caching, or pre-aggregated materialized views for heavy tables.
 
 ---
 
-This PRD should serve as the single source of truth for the AI model or any developer generating the next set of technical documents: Tech Stack Doc, Frontend Guidelines, Backend Structure, App Flow, File Structure, and IDE Rules. It contains all functional and non-functional requirements with no ambiguity, enabling seamless downstream development.
+This PRD lays out the precise scope, flows, features, and technical considerations needed for the "Everything AI" Super App. With these guidelines, an AI-driven development process can generate detailed technical docs, component blueprints, and implementation code without ambiguity.
