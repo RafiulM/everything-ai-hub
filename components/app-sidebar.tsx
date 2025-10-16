@@ -19,6 +19,10 @@ import {
   IconSearch,
   IconSettings,
   IconUsers,
+  IconMessageCircle,
+  IconBrush,
+  IconBrowser,
+  IconKey,
 } from "@tabler/icons-react"
 
 import { NavDocuments } from "@/components/nav-documents"
@@ -39,13 +43,27 @@ const staticData = {
   navMain: [
     {
       title: "Dashboard",
-      url: "#",
+      url: "/dashboard",
       icon: IconDashboard,
     },
     {
-      title: "Lifecycle",
+      title: "AI Services",
       url: "#",
-      icon: IconListDetails,
+      icon: IconFileAi,
+      items: [
+        {
+          title: "Chat",
+          url: "/dashboard/chat",
+        },
+        {
+          title: "Image Generation",
+          url: "/dashboard/image-generation",
+        },
+        {
+          title: "Web Scraper",
+          url: "/dashboard/web-scraper",
+        },
+      ],
     },
     {
       title: "Analytics",
@@ -53,14 +71,15 @@ const staticData = {
       icon: IconChartBar,
     },
     {
-      title: "Projects",
+      title: "Settings",
       url: "#",
-      icon: IconFolder,
-    },
-    {
-      title: "Team",
-      url: "#",
-      icon: IconUsers,
+      icon: IconSettings,
+      items: [
+        {
+          title: "API Keys",
+          url: "/dashboard/settings/keys",
+        },
+      ],
     },
   ],
   navClouds: [
