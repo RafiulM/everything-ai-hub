@@ -23,6 +23,7 @@ import {
   IconUsers,
   IconWorld,
   IconKey,
+  IconEdit,
 } from "@tabler/icons-react"
 
 import { NavDocuments } from "@/components/nav-documents"
@@ -65,6 +66,11 @@ const staticData = {
       title: "Web Scraper",
       url: "/dashboard/web-scraper",
       icon: IconWorld,
+    },
+    {
+      title: "AI Canvas",
+      url: "/dashboard/ai-canvas",
+      icon: IconEdit,
     },
   ],
   navClouds: [
