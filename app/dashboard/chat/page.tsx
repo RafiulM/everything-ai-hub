@@ -4,15 +4,13 @@ import { useState, useEffect, useRef } from 'react';
 // Import implemented manually for now
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import { toast } from 'sonner';
-import { Send, MessageSquare, Settings, History, Plus, Trash2 } from 'lucide-react';
+import { MessageSquare, Plus, PanelLeftClose, PanelLeft } from 'lucide-react';
+import { ChatInput } from '@/components/custom/ChatInput';
 
 // Available models
 const MODELS = [
@@ -44,8 +42,8 @@ export default function ChatPage() {
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [selectedModel, setSelectedModel] = useState('openai-gpt-4');
   const [systemPrompt, setSystemPrompt] = useState('You are a helpful AI assistant.');
-  const [showSettings, setShowSettings] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const [messages, setMessages] = useState<Array<{id: string; role: string; content: string; createdAt: string}>>([]);
@@ -53,9 +51,6 @@ export default function ChatPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInput(e.target.value);
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -145,6 +140,13 @@ export default function ChatPage() {
   }, [messages]);
 
   useEffect(() => {
+    // Scroll to bottom when new messages arrive
+    if (isLoading) {
+      scrollToBottom();
+    }
+  }, [isLoading]);
+
+  useEffect(() => {
     if (currentSessionId) {
       fetchMessages(currentSessionId);
     } else {
@@ -221,135 +223,136 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="container mx-auto py-8 h-[calc(100vh-8rem)]">
-      <div className="flex h-full gap-6">
-        {/* Sidebar */}
-        <Card className="w-80 flex flex-col">
-          <CardHeader>
-            <div className="flex justify-between items-center">
-              <CardTitle className="flex items-center gap-2">
-                <MessageSquare className="w-5 h-5" />
-                Chat Sessions
-              </CardTitle>
-              <Button size="sm" onClick={createNewSession}>
-                <Plus className="w-4 h-4" />
-              </Button>
-            </div>
-            <CardDescription>
-              Your conversation history
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex-1 overflow-hidden">
-            <ScrollArea className="h-full">
-              <div className="space-y-2">
-                {sessions.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <MessageSquare className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                    <p>No conversations yet</p>
-                    <p className="text-sm">Start a new chat to begin</p>
-                  </div>
-                ) : (
-                  sessions.map((session) => {
-                    const modelInfo = getModelInfo(session.model);
-                    const isSelected = currentSessionId === session.id;
-                    
-                    return (
-                      <div
-                        key={session.id}
-                        className={`p-3 rounded-lg cursor-pointer transition-colors ${
-                          isSelected 
-                            ? 'bg-primary text-primary-foreground' 
-                            : 'hover:bg-muted'
-                        }`}
-                        onClick={() => loadSession(session.id)}
+    <div className="h-screen flex flex-col">
+      <ResizablePanelGroup direction="horizontal" className="flex-1">
+        {/* Sessions Panel */}
+        {!sidebarCollapsed && (
+          <>
+            <ResizablePanel 
+              defaultSize={20} 
+              minSize={15} 
+              maxSize={35}
+              className="min-w-[280px]"
+            >
+              <Card className="h-full flex flex-col border-0 rounded-none">
+                <CardHeader>
+                  <div className="flex justify-between items-center">
+                    <CardTitle className="flex items-center gap-2">
+                      <MessageSquare className="w-5 h-5" />
+                      Chat Sessions
+                    </CardTitle>
+                    <div className="flex gap-1">
+                      <Button size="sm" onClick={createNewSession}>
+                        <Plus className="w-4 h-4" />
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="ghost"
+                        onClick={() => setSidebarCollapsed(true)}
                       >
-                        <div className="font-medium text-sm line-clamp-1">
-                          {session.title}
+                        <PanelLeftClose className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                  <CardDescription>
+                    Your conversation history
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="flex-1 overflow-hidden p-4">
+                  <ScrollArea className="h-full">
+                    <div className="space-y-2">
+                      {sessions.length === 0 ? (
+                        <div className="text-center py-8 text-muted-foreground">
+                          <MessageSquare className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                          <p>No conversations yet</p>
+                          <p className="text-sm">Start a new chat to begin</p>
                         </div>
-                        <div className="flex items-center gap-2 mt-1">
-                          <Badge variant={isSelected ? "secondary" : "outline"} className="text-xs">
-                            {modelInfo.shortName || modelInfo.name}
-                          </Badge>
-                          <span className="text-xs opacity-70">
-                            {new Date(session.updatedAt).toLocaleDateString()}
-                          </span>
-                        </div>
-                      </div>
-                    );
-                  })
+                      ) : (
+                        sessions.map((session) => {
+                          const modelInfo = getModelInfo(session.model);
+                          const isSelected = currentSessionId === session.id;
+                          
+                          return (
+                            <div
+                              key={session.id}
+                              className={`p-3 rounded-lg cursor-pointer transition-colors ${
+                                isSelected 
+                                  ? 'bg-primary text-primary-foreground' 
+                                  : 'hover:bg-muted'
+                              }`}
+                              onClick={() => loadSession(session.id)}
+                            >
+                              <div className="font-medium text-sm line-clamp-1">
+                                {session.title}
+                              </div>
+                              <div className="flex items-center gap-2 mt-1">
+                                <Badge variant={isSelected ? "secondary" : "outline"} className="text-xs">
+                                  {modelInfo.shortName || modelInfo.name}
+                                </Badge>
+                                <span className="text-xs opacity-70">
+                                  {new Date(session.updatedAt).toLocaleDateString()}
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+                  </ScrollArea>
+                </CardContent>
+              </Card>
+            </ResizablePanel>
+            <ResizableHandle withHandle />
+          </>
+        )}
+
+        {/* Main Chat Panel */}
+        <ResizablePanel defaultSize={sidebarCollapsed ? 100 : 80}>
+          <div className="h-full flex flex-col">
+            {/* Integrated Header */}
+            <div className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 p-4">
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-3">
+                  {sidebarCollapsed && (
+                    <Button 
+                      size="sm" 
+                      variant="ghost"
+                      onClick={() => setSidebarCollapsed(false)}
+                    >
+                      <PanelLeft className="w-4 h-4" />
+                    </Button>
+                  )}
+                  <div>
+                    <h1 className="text-lg font-semibold">
+                      {currentSessionId ? 
+                        sessions.find(s => s.id === currentSessionId)?.title || 'AI Chat' : 
+                        'New Conversation'
+                      }
+                    </h1>
+                    <p className="text-sm text-muted-foreground">
+                      {currentSessionId ? 
+                        `Using ${getModelInfo(selectedModel).name}` : 
+                        'Start a new conversation below'
+                      }
+                    </p>
+                  </div>
+                </div>
+                {currentSessionId && (
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="text-xs">
+                      {messages.length} messages
+                    </Badge>
+                  </div>
                 )}
               </div>
-            </ScrollArea>
-          </CardContent>
-        </Card>
+            </div>
 
-        {/* Main Chat Area */}
-        <div className="flex-1 flex flex-col gap-4">
-          {/* Header */}
-          <Card>
-            <CardHeader>
-              <div className="flex justify-between items-center">
-                <div>
-                  <CardTitle>AI Chat</CardTitle>
-                  <CardDescription>
-                    Chat with multiple AI models
-                  </CardDescription>
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => setShowSettings(!showSettings)}
-                  >
-                    <Settings className="w-4 h-4" />
-                  </Button>
-                  <Select value={selectedModel} onValueChange={setSelectedModel}>
-                    <SelectTrigger className="w-48">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {MODELS.map((model) => (
-                        <SelectItem key={model.id} value={model.id}>
-                          <div>
-                            <div className="font-medium">{model.name}</div>
-                            <div className="text-sm text-muted-foreground">
-                              {model.description}
-                            </div>
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </CardHeader>
-            
-            {showSettings && (
-              <>
-                <Separator />
-                <CardContent className="space-y-4">
-                  <div>
-                    <Label htmlFor="systemPrompt">System Prompt</Label>
-                    <Textarea
-                      id="systemPrompt"
-                      value={systemPrompt}
-                      onChange={(e) => setSystemPrompt(e.target.value)}
-                      placeholder="Enter system prompt..."
-                      rows={3}
-                    />
-                  </div>
-                </CardContent>
-                <Separator />
-              </>
-            )}
-          </Card>
-
-          {/* Messages */}
-          <Card className="flex-1 flex flex-col">
-            <CardContent className="flex-1 p-4">
-              <ScrollArea className="h-full">
-                <div className="space-y-4">
+            {/* Messages Area */}
+            <div className="flex-1 flex flex-col">
+              <ScrollArea className="flex-1 p-4">
+                <div className="space-y-4 max-w-4xl mx-auto">
                   {messages.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
+                    <div className="flex flex-col items-center justify-center h-full text-muted-foreground min-h-[60vh]">
                       <MessageSquare className="w-12 h-12 mb-4 opacity-50" />
                       <h3 className="text-lg font-medium mb-2">
                         {currentSessionId ? 'Continue the conversation' : 'Start a new conversation'}
@@ -400,33 +403,22 @@ export default function ChatPage() {
                   <div ref={messagesEndRef} />
                 </div>
               </ScrollArea>
-            </CardContent>
-            
-            {/* Input */}
-            <Separator />
-            <form onSubmit={handleSubmit} className="p-4">
-              <div className="flex gap-2">
-                <div className="flex-1">
-                  <Input
-                    value={input}
-                    onChange={handleInputChange}
-                    placeholder="Type your message..."
-                    disabled={isLoading}
-                    className="min-h-12"
-                  />
-                </div>
-                <Button 
-                  type="submit" 
-                  disabled={isLoading || !input.trim()}
-                  className="px-6"
-                >
-                  <Send className="w-4 h-4" />
-                </Button>
-              </div>
-            </form>
-          </Card>
-        </div>
-      </div>
+              
+              {/* Consolidated Chat Input */}
+              <ChatInput
+                input={input}
+                onInputChange={setInput}
+                selectedModel={selectedModel}
+                onModelChange={setSelectedModel}
+                systemPrompt={systemPrompt}
+                onSystemPromptChange={setSystemPrompt}
+                onSubmit={handleSubmit}
+                isLoading={isLoading}
+              />
+            </div>
+          </div>
+        </ResizablePanel>
+      </ResizablePanelGroup>
     </div>
   );
 }
