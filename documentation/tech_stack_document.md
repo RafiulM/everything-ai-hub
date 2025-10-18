@@ -1,5 +1,3 @@
-# Tech Stack Document
-
 # Tech Stack Document for everything-ai-hub
 
 This document explains the key technologies chosen for the "Everything AI" super app starter template. It’s written in everyday language so that anyone—technical or not—can understand why each tool was selected and how it fits into the overall project.
@@ -99,13 +97,3 @@ Everything-ai-hub uses a modern, full-stack approach to give you a head start on
 This combination of technologies ensures a secure, scalable, and developer-friendly foundation. You can focus on adding new AI features—chat, image generation, analytics—without worrying about the underlying setup.
 
 With this robust template in place, you’re ready to build and grow the “Everything AI” super app!
-
----
-**Document Details**
-- **Project ID**: b329b808-85a5-4e2f-8b32-1e5190543994
-- **Document ID**: bfe84882-4e9a-4bcc-b6a1-8864b1a60dcc
-- **Type**: custom
-- **Custom Type**: tech_stack_document
-- **Status**: completed
-- **Generated On**: 2025-10-15T23:07:26.201Z
-- **Last Updated**: N/A

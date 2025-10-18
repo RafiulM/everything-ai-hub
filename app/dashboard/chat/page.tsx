@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 // Import implemented manually for now
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,8 +12,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import { toast } from 'sonner';
-import { Send, MessageSquare, Settings, History, Plus, Trash2 } from 'lucide-react';
+import { Send, MessageSquare, Settings, History, Plus, Trash2, ChevronLeft, ChevronRight, Menu, Bot } from 'lucide-react';
 
 // Available models
 const MODELS = [
@@ -40,20 +44,39 @@ interface Message {
 }
 
 export default function ChatPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [sessions, setSessions] = useState<ChatSession[]>([]);
-  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [selectedModel, setSelectedModel] = useState('openai-gpt-4');
   const [systemPrompt, setSystemPrompt] = useState('You are a helpful AI assistant.');
   const [showSettings, setShowSettings] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [isSessionsPanelOpen, setIsSessionsPanelOpen] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('sessionsPanelOpen');
+      return saved !== null ? JSON.parse(saved) : true;
+    }
+    return true;
+  });
+  
+  const [panelSizes, setPanelSizes] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('chatPanelSizes');
+      return saved ? JSON.parse(saved) : [25, 75];
+    }
+    return [25, 75];
+  });
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  // Get current session ID from URL search parameters
+  const currentSessionId = searchParams.get('sessionId');
 
   const [messages, setMessages] = useState<Array<{id: string; role: string; content: string; createdAt: string}>>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInput(e.target.value);
   };
 
@@ -151,6 +174,44 @@ export default function ChatPage() {
       setMessages([]);
     }
   }, [currentSessionId]);
+  
+  // Update URL when session changes
+  const updateSessionInURL = (sessionId: string | null) => {
+    if (sessionId) {
+      router.replace(`/dashboard/chat?sessionId=${sessionId}`);
+    } else {
+      router.replace('/dashboard/chat');
+    }
+  };
+  
+  // Handle sessions panel toggle
+  const toggleSessionsPanel = () => {
+    const newState = !isSessionsPanelOpen;
+    setIsSessionsPanelOpen(newState);
+    localStorage.setItem('sessionsPanelOpen', JSON.stringify(newState));
+  };
+  
+  // Handle panel resize
+  const handlePanelResize = (sizes: number[]) => {
+    setPanelSizes(sizes);
+    localStorage.setItem('chatPanelSizes', JSON.stringify(sizes));
+  };
+  
+  // Check if mobile screen
+  const [isMobile, setIsMobile] = useState(false);
+  
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+      if (window.innerWidth < 768 && isSessionsPanelOpen) {
+        setIsSessionsPanelOpen(false);
+      }
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, [isSessionsPanelOpen]);
 
   const fetchSessions = async () => {
     try {
@@ -189,12 +250,12 @@ export default function ChatPage() {
   };
 
   const createNewSession = () => {
-    setCurrentSessionId(null);
+    updateSessionInURL(null);
     setMessages([]);
   };
 
   const loadSession = (sessionId: string) => {
-    setCurrentSessionId(sessionId);
+    updateSessionInURL(sessionId);
   };
 
   const scrollToBottom = () => {
@@ -222,69 +283,98 @@ export default function ChatPage() {
 
   return (
     <div className="container mx-auto py-8 h-[calc(100vh-8rem)]">
-      <div className="flex h-full gap-6">
-        {/* Sidebar */}
-        <Card className="w-80 flex flex-col">
+      <ResizablePanelGroup 
+        direction="horizontal" 
+        className="h-full rounded-lg border"
+        onLayout={handlePanelResize}
+      >
+        {/* Sessions Panel */}
+        <ResizablePanel 
+          defaultSize={isSessionsPanelOpen ? panelSizes[0] : 5} 
+          minSize={isSessionsPanelOpen ? (isMobile ? 25 : 15) : 5} 
+          maxSize={isMobile ? 90 : 40}
+          className={`transition-all duration-300 ${isSessionsPanelOpen ? '' : 'min-w-16'}`}
+        >
+          <Collapsible open={isSessionsPanelOpen} onOpenChange={setIsSessionsPanelOpen}>
+            <Card className={`h-full flex flex-col border-0 rounded-none ${isSessionsPanelOpen ? '' : 'w-16'}`}>
           <CardHeader>
             <div className="flex justify-between items-center">
-              <CardTitle className="flex items-center gap-2">
-                <MessageSquare className="w-5 h-5" />
-                Chat Sessions
-              </CardTitle>
-              <Button size="sm" onClick={createNewSession}>
-                <Plus className="w-4 h-4" />
-              </Button>
+              <CollapsibleTrigger asChild>
+                <Button variant="ghost" size="sm" className="p-1" onClick={toggleSessionsPanel}>
+                  {isSessionsPanelOpen ? <ChevronLeft className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+                </Button>
+              </CollapsibleTrigger>
+              {isSessionsPanelOpen && (
+                <>
+                  <CardTitle className="flex items-center gap-2 flex-1">
+                    <MessageSquare className="w-5 h-5" />
+                    Chat Sessions
+                  </CardTitle>
+                  <Button size="sm" onClick={createNewSession}>
+                    <Plus className="w-4 h-4" />
+                  </Button>
+                </>
+              )}
             </div>
-            <CardDescription>
-              Your conversation history
-            </CardDescription>
+            {isSessionsPanelOpen && (
+              <CardDescription>
+                Your conversation history
+              </CardDescription>
+            )}
           </CardHeader>
-          <CardContent className="flex-1 overflow-hidden">
-            <ScrollArea className="h-full">
-              <div className="space-y-2">
-                {sessions.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <MessageSquare className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                    <p>No conversations yet</p>
-                    <p className="text-sm">Start a new chat to begin</p>
-                  </div>
-                ) : (
-                  sessions.map((session) => {
-                    const modelInfo = getModelInfo(session.model);
-                    const isSelected = currentSessionId === session.id;
-                    
-                    return (
-                      <div
-                        key={session.id}
-                        className={`p-3 rounded-lg cursor-pointer transition-colors ${
-                          isSelected 
-                            ? 'bg-primary text-primary-foreground' 
-                            : 'hover:bg-muted'
-                        }`}
-                        onClick={() => loadSession(session.id)}
-                      >
-                        <div className="font-medium text-sm line-clamp-1">
-                          {session.title}
+          <CollapsibleContent className="flex-1 overflow-hidden">
+            <CardContent className="flex-1 overflow-hidden">
+              <ScrollArea className="h-full">
+                <div className="space-y-2">
+                  {sessions.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <MessageSquare className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                      <p>No conversations yet</p>
+                      <p className="text-sm">Start a new chat to begin</p>
+                    </div>
+                  ) : (
+                    sessions.map((session) => {
+                      const modelInfo = getModelInfo(session.model);
+                      const isSelected = currentSessionId === session.id;
+                      
+                      return (
+                        <div
+                          key={session.id}
+                          className={`p-3 rounded-lg cursor-pointer transition-colors ${
+                            isSelected 
+                              ? 'bg-primary text-primary-foreground' 
+                              : 'hover:bg-muted'
+                          }`}
+                          onClick={() => loadSession(session.id)}
+                        >
+                          <div className="font-medium text-sm line-clamp-1">
+                            {session.title}
+                          </div>
+                          <div className="flex items-center gap-2 mt-1">
+                            <Badge variant={isSelected ? "secondary" : "outline"} className="text-xs">
+                              {modelInfo.shortName || modelInfo.name}
+                            </Badge>
+                            <span className="text-xs opacity-70">
+                              {new Date(session.updatedAt).toLocaleDateString()}
+                            </span>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2 mt-1">
-                          <Badge variant={isSelected ? "secondary" : "outline"} className="text-xs">
-                            {modelInfo.shortName || modelInfo.name}
-                          </Badge>
-                          <span className="text-xs opacity-70">
-                            {new Date(session.updatedAt).toLocaleDateString()}
-                          </span>
-                        </div>
-                      </div>
-                    );
-                  })
-                )}
-              </div>
-            </ScrollArea>
-          </CardContent>
-        </Card>
-
+                      );
+                    })
+                  )}
+                </div>
+              </ScrollArea>
+            </CardContent>
+            </CollapsibleContent>
+            </Card>
+          </Collapsible>
+        </ResizablePanel>
+        
+        <ResizableHandle withHandle className="w-2" />
+        
         {/* Main Chat Area */}
-        <div className="flex-1 flex flex-col gap-4">
+        <ResizablePanel defaultSize={panelSizes[1]} minSize={50}>
+          <div className="h-full flex flex-col gap-4 p-4">
           {/* Header */}
           <Card>
             <CardHeader>
@@ -295,52 +385,8 @@ export default function ChatPage() {
                     Chat with multiple AI models
                   </CardDescription>
                 </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => setShowSettings(!showSettings)}
-                  >
-                    <Settings className="w-4 h-4" />
-                  </Button>
-                  <Select value={selectedModel} onValueChange={setSelectedModel}>
-                    <SelectTrigger className="w-48">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {MODELS.map((model) => (
-                        <SelectItem key={model.id} value={model.id}>
-                          <div>
-                            <div className="font-medium">{model.name}</div>
-                            <div className="text-sm text-muted-foreground">
-                              {model.description}
-                            </div>
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
               </div>
             </CardHeader>
-            
-            {showSettings && (
-              <>
-                <Separator />
-                <CardContent className="space-y-4">
-                  <div>
-                    <Label htmlFor="systemPrompt">System Prompt</Label>
-                    <Textarea
-                      id="systemPrompt"
-                      value={systemPrompt}
-                      onChange={(e) => setSystemPrompt(e.target.value)}
-                      placeholder="Enter system prompt..."
-                      rows={3}
-                    />
-                  </div>
-                </CardContent>
-                <Separator />
-              </>
-            )}
           </Card>
 
           {/* Messages */}
@@ -402,31 +448,98 @@ export default function ChatPage() {
               </ScrollArea>
             </CardContent>
             
-            {/* Input */}
+            {/* Enhanced Input Area */}
             <Separator />
-            <form onSubmit={handleSubmit} className="p-4">
-              <div className="flex gap-2">
-                <div className="flex-1">
-                  <Input
-                    value={input}
-                    onChange={handleInputChange}
-                    placeholder="Type your message..."
-                    disabled={isLoading}
-                    className="min-h-12"
-                  />
+            <div className="p-4 space-y-4">
+              {/* Controls Row */}
+              <div className="flex items-center gap-3">
+                {/* Model Selector */}
+                <div className="flex items-center gap-2">
+                  <Bot className="w-4 h-4 text-muted-foreground" />
+                  <Select value={selectedModel} onValueChange={setSelectedModel}>
+                    <SelectTrigger className="w-48">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {MODELS.map((model) => (
+                        <SelectItem key={model.id} value={model.id}>
+                          <div>
+                            <div className="font-medium">{model.name}</div>
+                            <div className="text-sm text-muted-foreground">
+                              {model.description}
+                            </div>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
-                <Button 
-                  type="submit" 
-                  disabled={isLoading || !input.trim()}
-                  className="px-6"
-                >
-                  <Send className="w-4 h-4" />
-                </Button>
+                
+                {/* Settings Popover */}
+                <Popover open={showSettings} onOpenChange={setShowSettings}>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm">
+                      <Settings className="w-4 h-4" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-80" align="end">
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <h4 className="font-medium leading-none">Chat Settings</h4>
+                        <p className="text-sm text-muted-foreground">
+                          Configure your chat preferences
+                        </p>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="systemPrompt">System Prompt</Label>
+                        <Textarea
+                          id="systemPrompt"
+                          value={systemPrompt}
+                          onChange={(e) => setSystemPrompt(e.target.value)}
+                          placeholder="Enter system prompt..."
+                          rows={4}
+                          className="text-sm"
+                        />
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
               </div>
-            </form>
-          </Card>
-        </div>
-      </div>
+              
+              {/* Input Form */}
+              <form onSubmit={handleSubmit}>
+                <div className="flex gap-3">
+                  <div className="flex-1">
+                    <Textarea
+                      value={input}
+                      onChange={(e) => setInput(e.target.value)}
+                      placeholder="Type your message... Press Shift+Enter for new line, Enter to send"
+                      disabled={isLoading}
+                      rows={3}
+                      className="min-h-[80px] resize-none"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault();
+                          handleSubmit(e);
+                        }
+                      }}
+                    />
+                  </div>
+                  <Button 
+                    type="submit" 
+                    disabled={isLoading || !input.trim()}
+                    className="px-6 h-auto"
+                    size="lg"
+                  >
+                    <Send className="w-4 h-4" />
+                  </Button>
+                </div>
+              </form>
+              </div>
+            </Card>
+          </div>
+        </ResizablePanel>
+      </ResizablePanelGroup>
     </div>
   );
 }
