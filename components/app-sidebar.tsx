@@ -15,10 +15,14 @@ import {
   IconFolder,
   IconHelp,
   IconListDetails,
+  IconMessageCircle,
+  IconPhoto,
   IconReport,
   IconSearch,
   IconSettings,
   IconUsers,
+  IconWorld,
+  IconKey,
 } from "@tabler/icons-react"
 
 import { NavDocuments } from "@/components/nav-documents"
@@ -39,28 +43,28 @@ const staticData = {
   navMain: [
     {
       title: "Dashboard",
-      url: "#",
+      url: "/dashboard",
       icon: IconDashboard,
     },
     {
-      title: "Lifecycle",
-      url: "#",
-      icon: IconListDetails,
-    },
-    {
       title: "Analytics",
-      url: "#",
+      url: "/dashboard",
       icon: IconChartBar,
     },
     {
-      title: "Projects",
-      url: "#",
-      icon: IconFolder,
+      title: "AI Chat",
+      url: "/dashboard/chat",
+      icon: IconMessageCircle,
     },
     {
-      title: "Team",
-      url: "#",
-      icon: IconUsers,
+      title: "Image Generation",
+      url: "/dashboard/image-generation",
+      icon: IconPhoto,
+    },
+    {
+      title: "Web Scraper",
+      url: "/dashboard/web-scraper",
+      icon: IconWorld,
     },
   ],
   navClouds: [
@@ -112,6 +116,11 @@ const staticData = {
     },
   ],
   navSecondary: [
+    {
+      title: "API Keys",
+      url: "/dashboard/settings/keys",
+      icon: IconKey,
+    },
     {
       title: "Settings",
       url: "#",
