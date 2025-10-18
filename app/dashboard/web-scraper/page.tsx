@@ -11,8 +11,11 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
+import { MarkdownEditor } from '@/components/markdown-editor';
+import { ChatInterface } from '@/components/chat-interface';
 import { toast } from 'sonner';
-import { Globe, Search, History, Loader2, Copy, ExternalLink, Clock, CheckCircle, XCircle } from 'lucide-react';
+import { Globe, Search, History, Loader2, Copy, ExternalLink, Clock, CheckCircle, XCircle, MessageSquare } from 'lucide-react';
 
 interface WebScrape {
   id: string;
@@ -34,6 +37,9 @@ export default function WebScraperPage() {
   const [selectedFormat, setSelectedFormat] = useState('markdown');
   const [includeMetadata, setIncludeMetadata] = useState(true);
   const [url, setUrl] = useState('');
+  const [markdownContent, setMarkdownContent] = useState('');
+  const [isContentLoading, setIsContentLoading] = useState(false);
+  const [contentSyncStatus, setContentSyncStatus] = useState<'synced' | 'syncing' | 'error'>('synced');
 
   const formats = [
     { value: 'markdown', label: 'Markdown', description: 'Clean, formatted text content' },
@@ -114,9 +120,72 @@ export default function WebScraperPage() {
     }
   };
 
+  // Constants for content management
+  const MAX_CONTEXT_LENGTH = 50000; // Max characters for AI context
+  const CONTENT_WARNING_LENGTH = 30000; // Show warning at this length
+
   const selectScrape = (scrape: WebScrape) => {
+    setIsContentLoading(true);
+    setContentSyncStatus('syncing');
+    
     setSelectedScrape(scrape);
+    
+    // Process content with a slight delay to show loading state
+    setTimeout(() => {
+      try {
+        if (scrape.content) {
+          if (scrape.format === 'markdown') {
+            setMarkdownContent(scrape.content);
+          } else {
+            // Convert other formats to markdown for editing
+            const convertedContent = `# Content from ${scrape.url}\n\n` +
+              (scrape.format === 'html' 
+                ? `\`\`\`html\n${scrape.content}\n\`\`\`` 
+                : `\`\`\`\n${scrape.content}\n\`\`\``);
+            setMarkdownContent(convertedContent);
+          }
+        } else {
+          setMarkdownContent('# No content available\n\nThe selected scrape does not contain any content.');
+        }
+        setContentSyncStatus('synced');
+      } catch (error) {
+        console.error('Error processing content:', error);
+        setContentSyncStatus('error');
+        toast.error('Error loading content');
+      } finally {
+        setIsContentLoading(false);
+      }
+    }, 300);
   };
+
+  // Handle markdown content changes with sync status
+  const handleMarkdownChange = (content: string) => {
+    setContentSyncStatus('syncing');
+    setMarkdownContent(content);
+    
+    // Show notification if content is very large
+    if (content.length > MAX_CONTEXT_LENGTH && markdownContent.length <= MAX_CONTEXT_LENGTH) {
+      toast.info('Content is very large - AI context will be truncated for performance');
+    }
+    
+    // Debounced sync status update
+    setTimeout(() => {
+      setContentSyncStatus('synced');
+    }, 500);
+  };
+
+  // Get truncated content for AI context
+  const getTruncatedContext = (content: string): string => {
+    if (content.length <= MAX_CONTEXT_LENGTH) {
+      return content;
+    }
+    
+    const truncated = content.substring(0, MAX_CONTEXT_LENGTH);
+    return truncated + '\n\n[Content truncated - original length: ' + content.length + ' characters]';
+  };
+
+  // Check if content is large
+  const isLargeContent = markdownContent.length > CONTENT_WARNING_LENGTH;
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text).then(() => {
@@ -156,7 +225,7 @@ export default function WebScraperPage() {
     <div className="container mx-auto py-8 h-[calc(100vh-8rem)]">
       <div className="flex h-full gap-6">
         {/* Scraper Form */}
-        <Card className="w-96">
+        <Card className="w-80">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Globe className="w-5 h-5" />
@@ -278,144 +347,168 @@ export default function WebScraperPage() {
           </CardContent>
         </Card>
 
-        {/* Results */}
-        <Card className="flex-1 flex flex-col">
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <History className="w-5 h-5" />
-                Scraping Results
-              </div>
-              {selectedScrape && (
-                <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => openUrl(selectedScrape.url)}
-                  >
-                    <ExternalLink className="w-3 h-3" />
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => copyToClipboard(selectedScrape.content || '')}
-                  >
-                    <Copy className="w-3 h-3" />
-                  </Button>
+        {/* Main Content - Split Panel */}
+        <div className="flex-1">
+          {!selectedScrape ? (
+            <Card className="h-full flex flex-col">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <History className="w-5 h-5" />
+                  Web Scraper with AI Chat
+                </CardTitle>
+                <CardDescription>
+                  Select a scraped website to edit its content and chat with AI
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex-1">
+                <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
+                  <Globe className="w-12 h-12 mb-4 opacity-50" />
+                  <h3 className="text-lg font-medium mb-2">Select a scraped website</h3>
+                  <p className="text-sm text-center max-w-md">
+                    Choose a website from the recent scrapes list or scrape a new URL to view its content
+                  </p>
                 </div>
-              )}
-            </CardTitle>
-            <CardDescription>
-              Website content and metadata
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex-1">
-            {!selectedScrape ? (
-              <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
-                <Globe className="w-12 h-12 mb-4 opacity-50" />
-                <h3 className="text-lg font-medium mb-2">Select a scraped website</h3>
-                <p className="text-sm text-center max-w-md">
-                  Choose a website from the recent scrapes list or scrape a new URL to view its content
-                </p>
-              </div>
-            ) : (
-              <div className="h-full flex flex-col">
-                {/* Header */}
-                <div className="space-y-2 pb-4 border-b">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="font-medium">{selectedScrape.url}</h3>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        {getStatusBadge(selectedScrape.status)}
-                        <span>{formatDate(selectedScrape.createdAt)}</span>
-                        <span>Format: {selectedScrape.format}</span>
-                      </div>
-                    </div>
+              </CardContent>
+            </Card>
+          ) : selectedScrape.status === 'pending' ? (
+            <Card className="h-full flex flex-col">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Processing...
+                </CardTitle>
+                <CardDescription>
+                  Scraping website content
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex-1">
+                <div className="flex items-center justify-center h-full">
+                  <div className="text-center">
+                    <Loader2 className="w-8 h-8 mx-auto mb-2 animate-spin" />
+                    <p>Scraping website...</p>
                   </div>
-                  
-                  {selectedScrape.metadata && (
-                    <div className="grid grid-cols-2 gap-2 text-sm">
-                      {selectedScrape.metadata.title && (
-                        <div>
-                          <span className="font-medium">Title:</span> {selectedScrape.metadata.title}
-                        </div>
-                      )}
-                      {selectedScrape.metadata.description && (
-                        <div>
-                          <span className="font-medium">Description:</span> {selectedScrape.metadata.description}
-                        </div>
-                      )}
-                      {selectedScrape.metadata.author && (
-                        <div>
-                          <span className="font-medium">Author:</span> {selectedScrape.metadata.author}
-                        </div>
-                      )}
-                      {selectedScrape.metadata.language && (
-                        <div>
-                          <span className="font-medium">Language:</span> {selectedScrape.metadata.language}
-                        </div>
-                      )}
-                    </div>
-                  )}
                 </div>
-
-                {/* Content */}
-                <div className="flex-1 mt-4">
-                  {selectedScrape.status === 'pending' ? (
-                    <div className="flex items-center justify-center h-full">
-                      <div className="text-center">
-                        <Loader2 className="w-8 h-8 mx-auto mb-2 animate-spin" />
-                        <p>Scraping website...</p>
-                      </div>
-                    </div>
-                  ) : selectedScrape.status === 'failed' ? (
-                    <div className="flex items-center justify-center h-full text-center">
+              </CardContent>
+            </Card>
+          ) : selectedScrape.status === 'failed' ? (
+            <Card className="h-full flex flex-col">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <XCircle className="w-5 h-5 text-red-500" />
+                  Scraping Failed
+                </CardTitle>
+                <CardDescription>
+                  Unable to scrape the selected website
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex-1">
+                <div className="flex items-center justify-center h-full text-center">
+                  <div>
+                    <XCircle className="w-12 h-12 mx-auto mb-4 text-red-500" />
+                    <h3 className="text-lg font-medium mb-2">Scraping Failed</h3>
+                    <p className="text-muted-foreground max-w-md">
+                      {selectedScrape.metadata?.error || 'An error occurred while scraping this website'}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <ResizablePanelGroup direction="horizontal" className="h-full">
+              {/* Left Panel - Markdown Editor */}
+              <ResizablePanel defaultSize={50} minSize={30}>
+                <Card className="h-full flex flex-col">
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
                       <div>
-                        <XCircle className="w-12 h-12 mx-auto mb-4 text-red-500" />
-                        <h3 className="text-lg font-medium mb-2">Scraping Failed</h3>
-                        <p className="text-muted-foreground max-w-md">
-                          {selectedScrape.metadata?.error || 'An error occurred while scraping this website'}
-                        </p>
+                        <CardTitle className="flex items-center gap-2">
+                          <Globe className="w-5 h-5" />
+                          Markdown Editor
+                        </CardTitle>
+                        <CardDescription>
+                          Edit the scraped content
+                        </CardDescription>
                       </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => openUrl(selectedScrape.url)}
+                      >
+                        <ExternalLink className="w-3 h-3 mr-1" />
+                        Open Source
+                      </Button>
                     </div>
-                  ) : selectedScrape.content ? (
-                    <ScrollArea className="h-full">
-                      <Tabs defaultValue="content" className="h-full">
-                        <TabsList>
-                          <TabsTrigger value="content">Content</TabsTrigger>
-                          <TabsTrigger value="raw">Raw</TabsTrigger>
-                        </TabsList>
-                        
-                        <TabsContent value="content" className="mt-4">
-                          <ScrollArea className="h-96 border rounded p-4">
-                            <div className="whitespace-pre-wrap text-sm">
-                              {selectedScrape.content}
-                            </div>
-                          </ScrollArea>
-                        </TabsContent>
-                        
-                        <TabsContent value="raw" className="mt-4">
-                          <ScrollArea className="h-96 border rounded p-4">
-                            <pre className="text-xs whitespace-pre-wrap">
-                              {JSON.stringify(selectedScrape, null, 2)}
-                            </pre>
-                          </ScrollArea>
-                        </TabsContent>
-                      </Tabs>
-                    </ScrollArea>
-                  ) : (
-                    <div className="flex items-center justify-center h-full text-muted-foreground">
-                      <div className="text-center">
-                        <p>No content available</p>
+                  </CardHeader>
+                  <CardContent className="flex-1 p-0">
+                    <MarkdownEditor 
+                      content={markdownContent}
+                      onChange={handleMarkdownChange}
+                      metadata={selectedScrape.metadata}
+                      url={selectedScrape.url}
+                    />
+                  </CardContent>
+                </Card>
+              </ResizablePanel>
+              
+              <ResizableHandle withHandle />
+              
+              {/* Right Panel - Chat Interface */}
+              <ResizablePanel defaultSize={50} minSize={30}>
+                <Card className="h-full flex flex-col">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <MessageSquare className="w-5 h-5" />
+                      AI Chat
+                      {contentSyncStatus === 'syncing' && (
+                        <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                      )}
+                    </CardTitle>
+                    <CardDescription className="flex items-center gap-2">
+                      Chat with AI about the scraped content
+                      {isLargeContent && (
+                        <Badge variant="outline" className="text-xs">
+                          Large content - {markdownContent.length > MAX_CONTEXT_LENGTH ? 'Truncated' : 'Full'} context
+                        </Badge>
+                      )}
+                      {contentSyncStatus === 'synced' && markdownContent && (
+                        <Badge variant="secondary" className="text-xs">
+                          {markdownContent.length.toLocaleString()} chars
+                        </Badge>
+                      )}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="flex-1 p-0">
+                    {isContentLoading ? (
+                      <div className="h-full flex items-center justify-center text-muted-foreground">
+                        <div className="text-center">
+                          <Loader2 className="w-8 h-8 mx-auto mb-2 animate-spin" />
+                          <p className="text-sm">Loading content...</p>
+                        </div>
                       </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                    ) : contentSyncStatus === 'error' ? (
+                      <div className="h-full flex items-center justify-center text-muted-foreground">
+                        <div className="text-center">
+                          <XCircle className="w-8 h-8 mx-auto mb-2 text-red-500" />
+                          <p className="text-sm">Error loading content</p>
+                        </div>
+                      </div>
+                    ) : (
+                      <ChatInterface 
+                        context={getTruncatedContext(markdownContent)} 
+                        contextTitle="Scraped Content"
+                        showModelSelector={true}
+                        showSettings={true}
+                        defaultSystemPrompt="You are a helpful AI assistant. You have been provided with scraped web content. Please answer questions about this content and help analyze or explain it."
+                      />
+                    )}
+                  </CardContent>
+                </Card>
+              </ResizablePanel>
+            </ResizablePanelGroup>
+          )}
+        </div>
       </div>
     </div>
   );
 }
+
