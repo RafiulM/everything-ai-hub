@@ -1,5 +1,3 @@
-# Frontend Guidelines Document
-
 # Frontend Guideline Document for "Everything AI Hub"
 
 This document outlines the frontend architecture, design principles, styling approach, component structure, state management, routing, performance optimizations, and testing strategies of the Everything AI Hub. It is written in everyday language to ensure clarity for all team members.
@@ -117,13 +115,3 @@ This document outlines the frontend architecture, design principles, styling app
 The Everything AI Hub frontend is built on a modern, modular base—Next.js with React and TypeScript—paired with utility-first styling via Tailwind CSS and accessible, reusable components from shadcn/ui. Our architecture balances server and client components to keep API keys and data secure, while interactive features like the AI chat use lightweight state management and streaming hooks from the Vercel AI SDK. 
 
 With clear design principles (usability, accessibility, responsiveness), a consistent theming system, organized component structure, and robust testing strategies, this setup ensures rapid feature development and long-term maintainability. Performance is baked in through Next.js optimizations, and the CI pipeline guarantees quality on every update. Together, these guidelines equip the team to build a scalable, secure, and user-friendly "Everything AI" super app.
-
----
-**Document Details**
-- **Project ID**: b329b808-85a5-4e2f-8b32-1e5190543994
-- **Document ID**: 95930655-501c-43ec-b2a8-a9446514a7d6
-- **Type**: custom
-- **Custom Type**: frontend_guidelines_document
-- **Status**: completed
-- **Generated On**: 2025-10-15T23:07:55.033Z
-- **Last Updated**: N/A

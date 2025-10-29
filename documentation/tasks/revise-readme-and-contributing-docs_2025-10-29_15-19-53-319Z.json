@@ -1,0 +1,50 @@
+[
+  {
+    "title": "Create comprehensive README.md",
+    "description": "Develop a comprehensive README.md file that clearly explains the Everything AI Super App project, its features, technology stack, and provides detailed setup instructions for new users and developers.",
+    "details": "Create a well-structured README.md following standard conventions with sections including: Project overview and purpose, key features list (authentication, AI chat, image generation, web scraping, analytics dashboard), technology stack (Next.js, TypeScript, React, Tailwind CSS, shadcn/ui, Drizzle ORM, PostgreSQL, Better Auth, Vercel AI SDK), prerequisites (Node.js >=18, Docker Desktop, PostgreSQL >=14), step-by-step installation instructions, environment variables configuration guide, usage examples, and links to additional documentation. Include badges for build status, license, and tech stack. Use proper markdown formatting with code blocks, tables, and clear headings for optimal readability.",
+    "status": "pending",
+    "test_strategy": "Validate by performing a complete dry-run of the setup instructions from a fresh clone, verify all links work correctly, and conduct peer review for clarity and completeness. Test markdown rendering on GitHub to ensure proper formatting.",
+    "priority": "high",
+    "ordinal": 0,
+    "task_group_id": "195d0863-1020-4d33-b19b-ad64bac94219",
+    "parent_task_id": null,
+    "ai_result": null,
+    "id": "95ce9089-0953-4ef8-a6a5-c8e6081e25b0",
+    "created_at": "2025-10-29T15:19:48.118854Z",
+    "user_id": "user_2qaB6nlVH3R9QXhQZpt1nmVDymN",
+    "subtasks": []
+  },
+  {
+    "title": "Create detailed CONTRIBUTING.md",
+    "description": "Establish a comprehensive CONTRIBUTING.md file that provides clear guidelines for community contributions, including code standards, development workflow, and pull request processes.",
+    "details": "Create a detailed CONTRIBUTING.md with sections covering: Code of Conduct (reference to Contributor Covenant), how to contribute (forking workflow, branch naming conventions, commit message standards), development setup instructions, coding standards and best practices (TypeScript conventions, React patterns, Tailwind CSS usage), testing requirements, pull request process (template, review criteria, merge requirements), issue reporting guidelines, and contact information for maintainers. Include examples of good commit messages and PR descriptions. Establish clear branching strategy (feature branches from main) and define acceptance criteria for contributions.",
+    "status": "pending",
+    "test_strategy": "Review document for completeness and clarity, ensure all referenced processes are feasible and well-documented. Validate that the contribution workflow aligns with the project's technical architecture and deployment process.",
+    "priority": "medium",
+    "ordinal": 1,
+    "task_group_id": "195d0863-1020-4d33-b19b-ad64bac94219",
+    "parent_task_id": null,
+    "ai_result": null,
+    "id": "8ccee0ef-fcaf-4021-af31-8112f7562393",
+    "created_at": "2025-10-29T15:19:48.118861Z",
+    "user_id": "user_2qaB6nlVH3R9QXhQZpt1nmVDymN",
+    "subtasks": []
+  },
+  {
+    "title": "Enhance documentation formatting and cross-references",
+    "description": "Polish both documentation files with consistent formatting, proper cross-references, and ensure they work well together as a cohesive documentation suite.",
+    "details": "Apply consistent markdown formatting across both files using proper heading hierarchy, code block syntax highlighting, tables for structured information, and bullet points for lists. Add cross-references between README.md and CONTRIBUTING.md where appropriate. Include a table of contents for both files if they become lengthy. Add shields.io badges to README for visual appeal and quick project status overview. Ensure all external links are valid and use proper markdown link syntax. Apply markdown linting rules for consistency and readability. Create a documentation structure that scales well for future additions.",
+    "status": "pending",
+    "test_strategy": "Use a markdown linter to validate formatting consistency, test all internal and external links, verify proper rendering on GitHub, and ensure the documentation provides a smooth onboarding experience for new contributors.",
+    "priority": "low",
+    "ordinal": 2,
+    "task_group_id": "195d0863-1020-4d33-b19b-ad64bac94219",
+    "parent_task_id": null,
+    "ai_result": null,
+    "id": "ac32abf8-1154-4630-a722-1430c584127e",
+    "created_at": "2025-10-29T15:19:48.118863Z",
+    "user_id": "user_2qaB6nlVH3R9QXhQZpt1nmVDymN",
+    "subtasks": []
+  }
+]
