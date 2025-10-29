@@ -1,5 +1,3 @@
-# Project Requirements Document
-
 # Project Requirements Document (PRD)
 
 ## 1. Project Overview
@@ -97,13 +95,3 @@ After adding their third-party AI API key, the user navigates to the Chat page. 
 ---
 
 This PRD lays out the precise scope, flows, features, and technical considerations needed for the "Everything AI" Super App. With these guidelines, an AI-driven development process can generate detailed technical docs, component blueprints, and implementation code without ambiguity.
-
----
-**Document Details**
-- **Project ID**: b329b808-85a5-4e2f-8b32-1e5190543994
-- **Document ID**: 833c1c1a-95b8-4157-9ccf-b4d0d8488f0b
-- **Type**: custom
-- **Custom Type**: project_requirements_document
-- **Status**: completed
-- **Generated On**: 2025-10-15T23:05:35.960Z
-- **Last Updated**: N/A

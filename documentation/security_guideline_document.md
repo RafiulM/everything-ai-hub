@@ -1,5 +1,3 @@
-# Security Guideline Document
-
 # everything-ai-hub Security Guidelines
 
 This document outlines the security best practices and design decisions tailored for the **everything-ai-hub** starter template. By following these guidelines, you ensure a robust, maintainable, and secure foundation for your "Everything AI" super app.
@@ -111,14 +109,3 @@ This document outlines the security best practices and design decisions tailored
 ---
 
 By embedding these practices into **everything-ai-hub**, you establish a defense-in-depth strategy that protects both your infrastructure and users as you scale your "Everything AI" super app.
-
-
----
-**Document Details**
-- **Project ID**: b329b808-85a5-4e2f-8b32-1e5190543994
-- **Document ID**: 87f3f018-9620-4084-91a1-499a1e0b0729
-- **Type**: custom
-- **Custom Type**: security_guideline_document
-- **Status**: completed
-- **Generated On**: 2025-10-15T23:06:59.415Z
-- **Last Updated**: N/A

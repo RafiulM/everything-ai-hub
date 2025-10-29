@@ -1,5 +1,3 @@
-# Backend Structure Document
-
 # Backend Structure Document for everything-ai-hub
 
 This document lays out the backend architecture, hosting solutions, and infrastructure components of the `everything-ai-hub` super app. It uses everyday language so anyone can understand how the backend is put together.
@@ -221,13 +219,3 @@ The `everything-ai-hub` backend combines Next.js Server Actions, a managed Postg
 • Strong security posture with encrypted API keys, secure environment variables, and robust authentication.
 
 This setup ensures the backend can grow with new AI features, maintain top performance, and keep user data safe.
-
----
-**Document Details**
-- **Project ID**: b329b808-85a5-4e2f-8b32-1e5190543994
-- **Document ID**: 9394301a-1887-43de-aeda-57f09258ebae
-- **Type**: custom
-- **Custom Type**: backend_structure_document
-- **Status**: completed
-- **Generated On**: 2025-10-15T23:06:07.470Z
-- **Last Updated**: N/A
