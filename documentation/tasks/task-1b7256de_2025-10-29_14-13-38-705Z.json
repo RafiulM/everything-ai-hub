@@ -1,0 +1,50 @@
+[
+  {
+    "title": "Document detailed setup and installation instructions",
+    "description": "Create comprehensive getting started section with step-by-step installation, environment setup, and database configuration instructions",
+    "details": "Add a detailed 'Getting Started' section with: 1) Prerequisites (Node.js >=18, Docker Desktop, pnpm) 2) Step-by-step installation commands (git clone, pnpm install) 3) Environment variable setup with reference to .env.example 4) Database setup instructions (Docker compose up, pnpm db:push for migrations) 5) Development server startup (pnpm dev) 6) Verification steps to confirm successful setup 7) Troubleshooting common issues. All commands should be copy-paste friendly and tested across different environments.",
+    "status": "pending",
+    "test_strategy": "Follow the documented setup instructions from scratch on a clean environment to ensure they work correctly. Verify all commands execute successfully and lead to a running application.",
+    "priority": "high",
+    "ordinal": 1,
+    "task_group_id": "226ee7b7-9a3e-45d9-a962-1b8cdb4fdcef",
+    "parent_task_id": null,
+    "ai_result": null,
+    "id": "02eed937-2228-44b4-85d1-5debdf258832",
+    "created_at": "2025-10-29T14:13:34.405491Z",
+    "user_id": "user_2qaB6nlVH3R9QXhQZpt1nmVDymN",
+    "subtasks": []
+  },
+  {
+    "title": "Create comprehensive README structure and content",
+    "description": "Write a complete README.md file with all essential sections including project overview, features, tech stack, and getting started guide",
+    "details": "Create a well-structured README.md file that includes: 1) Project title with badges for build status, license, etc. 2) Clear project overview explaining the Everything AI Super App concept 3) Key features list highlighting authentication, AI chat, image generation, web scraping, and analytics 4) Technology stack section with icons/badges for Next.js, TypeScript, React, Tailwind CSS, shadcn/ui, Drizzle ORM, PostgreSQL, Better Auth 5) Table of contents for easy navigation 6) Professional tone with encouraging language for new developers. Use markdown best practices with proper headings, code blocks, and formatting.",
+    "status": "pending",
+    "test_strategy": "Manually review the README for clarity, completeness, and proper markdown formatting. Verify all sections are present and well-organized. Check that the content accurately reflects the project as described in the PRD.",
+    "priority": "high",
+    "ordinal": 0,
+    "task_group_id": "226ee7b7-9a3e-45d9-a962-1b8cdb4fdcef",
+    "parent_task_id": null,
+    "ai_result": null,
+    "id": "975f4473-f271-42ba-bcec-9f8ac04b5d3e",
+    "created_at": "2025-10-29T14:13:34.405484Z",
+    "user_id": "user_2qaB6nlVH3R9QXhQZpt1nmVDymN",
+    "subtasks": []
+  },
+  {
+    "title": "Add project structure documentation and deployment guide",
+    "description": "Document the codebase structure and provide deployment instructions with environment variable reference",
+    "details": "Add final sections to complete the README: 1) Project Structure section explaining key directories (app/, components/ui/, lib/) and their purposes 2) Environment Variables section with detailed explanations of each required variable and their purposes 3) Deployment section with Vercel deployment instructions and environment variable configuration 4) Contributing guidelines (if applicable) 5) License information 6) Optional: Add a 'Deploy to Vercel' button and screenshots/GIF of the running application for visual appeal. Ensure the .env.example file exists and is referenced properly.",
+    "status": "pending",
+    "test_strategy": "Verify the project structure documentation matches the actual codebase organization. Test deployment instructions by following them step-by-step. Ensure all environment variables are documented and the .env.example file is complete and accurate.",
+    "priority": "medium",
+    "ordinal": 2,
+    "task_group_id": "226ee7b7-9a3e-45d9-a962-1b8cdb4fdcef",
+    "parent_task_id": null,
+    "ai_result": null,
+    "id": "b53760f6-1d4a-4553-9fc4-b8f211026e93",
+    "created_at": "2025-10-29T14:13:34.405493Z",
+    "user_id": "user_2qaB6nlVH3R9QXhQZpt1nmVDymN",
+    "subtasks": []
+  }
+]
