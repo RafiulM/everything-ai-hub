@@ -1,5 +1,3 @@
-# App Flow Document
-
 # everything-ai-hub App Flow Document
 
 ## Onboarding and Sign-In/Sign-Up
@@ -25,13 +23,3 @@ If a user enters invalid data during sign-up or sign-in, the form displays a cle
 
 ## Conclusion and Overall App Journey
 From the moment a user discovers the Everything AI hub and creates an account, they move seamlessly into a protected environment where they can access a unified suite of AI services. Signing in leads them to a central dashboard that connects to chat, image generation, and web scraping features. Each feature uses secure server-side calls and persists results for real-time analytics. Users can manage their profile and API keys in a dedicated settings area and return to the dashboard at any time. Throughout the experience, clear feedback guides users around errors or connectivity issues, ensuring they can focus on generating AI content and tracking usage without friction.
-
----
-**Document Details**
-- **Project ID**: b329b808-85a5-4e2f-8b32-1e5190543994
-- **Document ID**: 00cbb53e-4f5d-49c6-814d-813158757d31
-- **Type**: custom
-- **Custom Type**: app_flow_document
-- **Status**: completed
-- **Generated On**: 2025-10-15T23:06:30.313Z
-- **Last Updated**: N/A
