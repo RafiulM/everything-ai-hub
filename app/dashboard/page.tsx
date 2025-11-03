@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
@@ -10,13 +10,16 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
 import { toast } from 'sonner';
-import { 
-  Bot, 
-  Image as ImageIcon, 
-  Globe, 
-  MessageSquare, 
-  TrendingUp, 
-  DollarSign, 
+import { FilterRow } from '@/components/dashboard/filter-row';
+import { useFilterParams } from '@/lib/url-params';
+import { createQueryString } from '@/lib/url-params';
+import {
+  Bot,
+  Image as ImageIcon,
+  Globe,
+  MessageSquare,
+  TrendingUp,
+  DollarSign,
   Activity,
   BarChart3,
   PieChart as PieChartIcon,
@@ -26,6 +29,29 @@ import {
 
 interface AnalyticsData {
   period: number;
+  pagination?: {
+    currentPage: number;
+    totalPages: number;
+    totalCount: number;
+    limit: number;
+    hasNextPage: boolean;
+    hasPreviousPage: boolean;
+  };
+  filters?: {
+    applied: {
+      search?: string;
+      status?: string[];
+      category?: string[];
+      dateFrom?: string;
+      dateTo?: string;
+      sortBy?: string;
+      sortOrder?: 'asc' | 'desc';
+    };
+    dateRange: {
+      from: string;
+      to: string;
+    };
+  };
   summary: {
     totalRequests: number;
     totalTokens: number;
@@ -67,29 +93,67 @@ const PROVIDER_COLORS = {
 export default function Page() {
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [period, setPeriod] = useState('7');
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchAnalytics();
-  }, [period]);
+  // Use URL filter parameters
+  const { filters, hasActiveFilters } = useFilterParams();
 
-  const fetchAnalytics = async () => {
+  // Define filter options for the filter row
+  const statusOptions = [
+    { value: 'completed', label: 'Completed' },
+    { value: 'failed', label: 'Failed' },
+    { value: 'pending', label: 'Pending' },
+  ];
+
+  const categoryOptions = [
+    { value: 'chat', label: 'AI Chat' },
+    { value: 'image', label: 'Image Generation' },
+    { value: 'scraping', label: 'Web Scraping' },
+  ];
+
+  // Fetch analytics data with filters
+  const fetchAnalytics = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/analytics?period=${period}`);
+      setError(null);
+
+      // Build query string from filters
+      const queryString = createQueryString({
+        search: filters.search,
+        status: filters.status,
+        category: filters.category,
+        dateFrom: filters.dateFrom,
+        dateTo: filters.dateTo,
+        sortBy: filters.sortBy,
+        sortOrder: filters.sortOrder,
+        page: filters.page,
+        limit: filters.limit,
+      });
+
+      const url = queryString ? `/api/analytics?${queryString}` : '/api/analytics';
+      const response = await fetch(url);
       const result = await response.json();
-      
+
       if (result.success) {
         setData(result.data);
       } else {
-        toast.error('Failed to fetch analytics');
+        setError(result.message || 'Failed to fetch analytics');
+        toast.error(result.message || 'Failed to fetch analytics');
       }
     } catch (error) {
-      toast.error('Failed to fetch analytics');
+      const errorMessage = 'Failed to fetch analytics. Please try again later.';
+      setError(errorMessage);
+      toast.error(errorMessage);
+      console.error('Dashboard fetch error:', error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters]);
+
+  // Refetch data when filters change
+  useEffect(() => {
+    fetchAnalytics();
+  }, [fetchAnalytics]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -131,17 +195,34 @@ export default function Page() {
     return (
       <div className="container mx-auto py-8">
         <div className="flex items-center justify-center h-64">
-          <div className="text-lg">Loading analytics...</div>
+          <div className="text-center space-y-2">
+            <div className="text-lg">Loading analytics...</div>
+            {hasActiveFilters && (
+              <div className="text-sm text-muted-foreground">
+                Applying filters...
+              </div>
+            )}
+          </div>
         </div>
       </div>
     );
   }
 
-  if (!data) {
+  if (error || !data) {
     return (
       <div className="container mx-auto py-8">
         <div className="flex items-center justify-center h-64">
-          <div className="text-lg">Failed to load analytics</div>
+          <div className="text-center space-y-4">
+            <div className="text-lg text-destructive">
+              {error || 'Failed to load analytics'}
+            </div>
+            <button
+              onClick={fetchAnalytics}
+              className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+            >
+              Retry
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -177,25 +258,73 @@ export default function Page() {
   return (
     <div className="container mx-auto py-8 space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold">Analytics Dashboard</h1>
           <p className="text-muted-foreground">Your AI service usage and insights</p>
         </div>
         <div className="flex items-center gap-2">
           <Calendar className="w-4 h-4" />
-          <Select value={period} onValueChange={setPeriod}>
-            <SelectTrigger className="w-32">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="7">Last 7 days</SelectItem>
-              <SelectItem value="30">Last 30 days</SelectItem>
-              <SelectItem value="90">Last 90 days</SelectItem>
-            </SelectContent>
-          </Select>
+          <span className="text-sm text-muted-foreground">
+            {data.filters?.dateRange ? (
+              <>
+                {new Date(data.filters.dateRange.from).toLocaleDateString()} -{' '}
+                {new Date(data.filters.dateRange.to).toLocaleDateString()}
+              </>
+            ) : (
+              `Last ${data.period} days`
+            )}
+          </span>
         </div>
       </div>
+
+      {/* Enhanced Filter Row */}
+      <FilterRow
+        statusOptions={statusOptions}
+        categoryOptions={categoryOptions}
+        className="w-full"
+      />
+
+      {/* Filter Summary and Pagination Info */}
+      {hasActiveFilters && (
+        <Card className="border-dashed">
+          <CardContent className="pt-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div className="text-sm text-muted-foreground">
+                <span className="font-medium">Filtered results</span>
+                {data.filters?.applied && (
+                  <ul className="mt-1 space-y-1">
+                    {data.filters.applied.search && (
+                      <li>• Search: "{data.filters.applied.search}"</li>
+                    )}
+                    {data.filters.applied.category && data.filters.applied.category.length > 0 && (
+                      <li>• Categories: {data.filters.applied.category.join(', ')}</li>
+                    )}
+                    {data.filters.applied.status && data.filters.applied.status.length > 0 && (
+                      <li>• Status: {data.filters.applied.status.join(', ')}</li>
+                    )}
+                    {data.filters.applied.sortBy && (
+                      <li>• Sorted by: {data.filters.applied.sortBy} ({data.filters.applied.sortOrder})</li>
+                    )}
+                  </ul>
+                )}
+              </div>
+              {data.pagination && (
+                <div className="text-sm text-muted-foreground">
+                  <span className="font-medium">
+                    Showing {data.summary.totalRequests} of {data.pagination.totalCount} results
+                  </span>
+                  {data.pagination.totalPages > 1 && (
+                    <div className="mt-1">
+                      Page {data.pagination.currentPage} of {data.pagination.totalPages}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
